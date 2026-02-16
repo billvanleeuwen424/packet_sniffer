@@ -3,11 +3,10 @@ use std::fmt;
 
 #[derive(Debug)]
 pub enum AppError {
-    #[allow(dead_code)]
     InterfaceNotFound(String),
+    Interface(InterfaceError),
     #[allow(dead_code)]
     PermissionDenied,
-    #[allow(dead_code)]
     NoInterfaces,
 }
 
@@ -15,6 +14,7 @@ impl fmt::Display for AppError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             AppError::InterfaceNotFound(name) => write!(f, "interface not found: {name}"),
+            AppError::Interface(e) => write!(f, "{e}"),
             AppError::PermissionDenied => {
                 write!(f, "permission denied (requires CAP_NET_RAW and sudo)")
             }
@@ -25,6 +25,7 @@ impl fmt::Display for AppError {
 
 impl error::Error for AppError {}
 
+/// AppError tests
 #[cfg(test)]
 mod tests {
 
@@ -61,3 +62,18 @@ mod tests {
         assert_eq!(output, "no network interfaces found");
     }
 }
+
+#[derive(Debug)]
+pub enum InterfaceError {
+    Io(std::io::Error),
+}
+
+impl fmt::Display for InterfaceError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            InterfaceError::Io(e) => write!(f, "interface error: {}", e),
+        }
+    }
+}
+
+impl error::Error for InterfaceError {}

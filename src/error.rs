@@ -30,6 +30,7 @@ mod tests {
 
     use super::*;
 
+    // Satisfies: R-01-09 — verifies InterfaceNotFound error message format
     #[test]
     fn test_interface_not_found_display() {
         let err = AppError::InterfaceNotFound("lo".to_string());
@@ -39,6 +40,7 @@ mod tests {
         assert_eq!(output, "interface not found: lo");
     }
 
+    // Satisfies: R-01-10 — verifies PermissionDenied message mentions sudo and CAP_NET_RAW
     #[test]
     fn test_permission_denied() {
         let err = AppError::PermissionDenied;
@@ -49,6 +51,7 @@ mod tests {
         assert!(output.contains("CAP_NET_RAW"), "{}", output);
     }
 
+    // Satisfies: R-01-11 — verifies NoInterfaces error message format
     #[test]
     fn test_no_interfaces() {
         let err = AppError::NoInterfaces;

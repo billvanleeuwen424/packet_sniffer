@@ -5,7 +5,7 @@ pub trait InterfaceProvider {
     fn list_interfaces(&self) -> Result<Vec<String>, InterfaceError>;
 }
 
-pub struct OsInterfaceProvider {}
+pub struct OsInterfaceProvider;
 
 impl InterfaceProvider for OsInterfaceProvider {
     fn list_interfaces(&self) -> Result<Vec<String>, InterfaceError> {
@@ -21,22 +21,37 @@ impl InterfaceProvider for OsInterfaceProvider {
 }
 
 #[cfg(test)]
-mod test_helpers {
+pub mod test_helpers {
     use super::*;
 
     pub struct MockInterfaceProvider {
         interfaces: Vec<String>,
+        should_fail: bool,
     }
 
     impl MockInterfaceProvider {
         pub fn new(interfaces: Vec<String>) -> Self {
-            Self { interfaces }
+            Self {
+                interfaces,
+                should_fail: false,
+            }
+        }
+
+        pub fn failing() -> Self {
+            Self {
+                interfaces: vec![],
+                should_fail: true,
+            }
         }
     }
 
     impl InterfaceProvider for MockInterfaceProvider {
         fn list_interfaces(&self) -> Result<Vec<String>, InterfaceError> {
-            Ok(self.interfaces.clone())
+            if self.should_fail {
+                Err(InterfaceError::Io(std::io::Error::other("mock failure")))
+            } else {
+                Ok(self.interfaces.clone())
+            }
         }
     }
 }

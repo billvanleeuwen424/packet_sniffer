@@ -23,7 +23,14 @@ impl fmt::Display for AppError {
     }
 }
 
-impl error::Error for AppError {}
+impl error::Error for AppError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            AppError::Interface(e) => Some(e),
+            _ => None,
+        }
+    }
+}
 
 /// AppError tests
 #[cfg(test)]
@@ -61,6 +68,26 @@ mod tests {
 
         assert_eq!(output, "no network interfaces found");
     }
+
+    #[test]
+    fn interface_error_io_display() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "access denied");
+        let err = InterfaceError::Io(io_err);
+
+        let output = format!("{}", err);
+
+        assert_eq!(output, "interface error: access denied");
+    }
+
+    #[test]
+    fn app_error_interface_delegates_to_interface_error_display() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::Other, "disk read failed");
+        let err = AppError::Interface(InterfaceError::Io(io_err));
+
+        let output = format!("{}", err);
+
+        assert_eq!(output, "interface error: disk read failed");
+    }
 }
 
 #[derive(Debug)]
@@ -76,4 +103,22 @@ impl fmt::Display for InterfaceError {
     }
 }
 
-impl error::Error for InterfaceError {}
+impl error::Error for InterfaceError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            InterfaceError::Io(e) => Some(e),
+        }
+    }
+}
+
+impl From<std::io::Error> for InterfaceError {
+    fn from(e: std::io::Error) -> Self {
+        InterfaceError::Io(e)
+    }
+}
+
+impl From<InterfaceError> for AppError {
+    fn from(e: InterfaceError) -> Self {
+        AppError::Interface(e)
+    }
+}
